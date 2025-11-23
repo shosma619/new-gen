@@ -1,0 +1,515 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Spirit Airline E-Ticket</title>
+
+  <!-- Google font (optional) -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --gold: #facc15;
+      --gold-dark: #f59e0b;
+      --bg-1: #fff7ed;
+      --bg-2: #fffbeb;
+      --muted: #6b7280;
+      --card-bg: #ffffff;
+      --shadow: 0 6px 18px rgba(15,23,42,0.08);
+      --radius-lg: 14px;
+      font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+    html,body{height:100%; margin:0; background: linear-gradient(135deg, var(--bg-2), var(--bg-1)); -webkit-font-smoothing:antialiased;}
+    .wrap{min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px;}
+    .container{max-width:760px; width:100%;}
+    .controls{display:flex; gap:12px; flex-wrap:wrap; justify-content:center; margin-bottom:18px;}
+    .btn{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:10px 14px; border-radius:10px; font-weight:600; cursor:pointer;
+      border: none; box-shadow: var(--shadow);
+    }
+    .btn svg{width:18px; height:18px}
+    .btn-blue{background:#2563eb;color:#fff}
+    .btn-red{background:#ef4444;color:#fff}
+    .btn-green{background:#10b981;color:#fff}
+    .btn-purple{background:#7c3aed;color:#fff}
+
+    /* ticket */
+    .ticket{background: linear-gradient(180deg, #fff 0%, #fff 100%); border-radius:16px; overflow:hidden; box-shadow: var(--shadow);}
+    .ticket-header{background:var(--gold); color:#000; padding:26px 24px; border-top-left-radius:16px; border-top-right-radius:16px;}
+    .ticket-header .top-row{display:flex; align-items:center; justify-content:space-between; gap:12px;}
+    .title{font-size:28px; font-weight:800; letter-spacing:0.6px;}
+    .subtitle{font-size:12px; font-weight:700; opacity:0.9; margin-top:6px;}
+    .flight-no{border-top:1px solid rgba(0,0,0,0.08); padding-top:14px; margin-top:12px;}
+    .plane-ico{width:56px; height:56px; opacity:0.85}
+
+    .ticket-body{background:#ffffff; padding:22px;}
+    .section{margin-bottom:22px; padding-bottom:18px; border-bottom:1px solid #eee;}
+    .section h3{display:flex; align-items:center; gap:10px; font-size:16px; margin:0 0 12px 0; color:#111827;}
+    .grid-2{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+    .grid-3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; align-items:start;}
+    .label{font-size:11px; color:var(--muted); letter-spacing:1px; text-transform:uppercase; font-weight:700;}
+    .val{font-size:18px; font-weight:800; color:#000; margin-top:6px;}
+    .small{font-size:13px; color:#374151;}
+    .info-row{display:flex; gap:10px; align-items:center; font-size:14px; color:#374151;}
+
+    .price-card{background: linear-gradient(90deg,var(--gold) 0%, #f6b70d 100%); padding:18px; border-radius:12px; color:#000; display:flex; justify-content:space-between; align-items:center;}
+    .price-card .cost{font-size:28px; font-weight:900;}
+    .footer{padding:16px; text-align:center; font-size:12px; color:#6b7280;}
+
+    /* responsive */
+    @media (max-width:640px){
+      .grid-2{grid-template-columns:1fr;}
+      .grid-3{grid-template-columns:1fr;}
+      .title{font-size:22px}
+      .plane-ico{width:44px;height:44px}
+    }
+
+    /* invisible container for cloning */
+    #clone-holder{position:fixed; top:-9999px; left:-9999px; width:400px; height:0; overflow:hidden; pointer-events:none;}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="container">
+      <div class="controls" aria-hidden="false">
+        <button id="downloadImage" class="btn btn-blue" title="Download PNG">
+          <!-- download icon -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download Image
+        </button>
+
+        <button id="downloadPDF" class="btn btn-red" title="Download PDF">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h7l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"/><path d="M14 2v6h6"/></svg>
+          Download PDF
+        </button>
+
+        <button id="shareImage" class="btn btn-green" title="Share Image">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.59 13.51l6.83 3.98"/><path d="M15.41 6.51L8.58 10.49"/></svg>
+          Share Image
+        </button>
+
+        <button id="sharePDF" class="btn btn-purple" title="Share PDF">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+          Share PDF
+        </button>
+      </div>
+
+      <!-- Hidden holder for cloned element so html2canvas preserves layout -->
+      <div id="clone-holder" aria-hidden="true"></div>
+
+      <!-- MAIN TICKET -->
+      <div id="ticket" class="ticket" style="max-width:760px; margin:0 auto;">
+        <!-- header -->
+        <div class="ticket-header">
+          <div class="top-row">
+            <div>
+              <div class="title">SPIRIT AIRLINE</div>
+              <div class="subtitle">E-TICKET & ITINERARY</div>
+            </div>
+            <svg class="plane-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2 16 22 8 15 16 8 15 2 16z"/><path d="M8 3v6"/></svg>
+          </div>
+          <div class="flight-no">
+            <div style="font-size:18px; font-weight:800; letter-spacing:1px;">Flight #NK1251</div>
+          </div>
+        </div>
+
+        <div class="ticket-body">
+          <!-- Passenger -->
+          <div class="section">
+            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-3-3.87"/><path d="M4 21v-2a4 4 0 0 1 3-3.87"/><circle cx="12" cy="7" r="4"/></svg> Passenger Information</h3>
+            <div class="grid-2">
+              <div>
+                <div class="label">Passenger Name</div>
+                <div class="val">AHMAD / ISRAH</div>
+              </div>
+              <div>
+                <div class="label">Number of Travelers</div>
+                <div class="val">1 Adult</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Itinerary -->
+          <div class="section">
+            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 12-9 12s-9-5-9-12a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> Flight Itinerary</h3>
+
+            <!-- Leg 1 -->
+            <div style="margin-bottom:12px; padding-bottom:12px; border-bottom:1px dashed #eee;">
+              <div class="grid-3" style="margin-bottom:8px;">
+                <div>
+                  <div class="label">From</div>
+                  <div class="val">MCT</div>
+                  <div class="small">Muscat</div>
+                </div>
+                <div style="text-align:center;"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2 12h20"/><path d="M12 2l4 10-4-2-4 2 4-10z"/></svg></div>
+                <div>
+                  <div class="label">To</div>
+                  <div class="val">LHR</div>
+                  <div class="small">London</div>
+                </div>
+              </div>
+              <div style="display:flex; gap:18px; align-items:flex-start;">
+                <div class="info-row">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l3 2"/></svg>
+                  <div>
+                    <div class="small">Departure: 1:05 PM</div>
+                    <div style="font-weight:700">Arrival: 5:25 PM</div>
+                  </div>
+                </div>
+                <div>
+                  <div class="small">Transfer in London</div>
+                  <div style="font-weight:700">15h 35m</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Leg 2 -->
+            <div style="margin-bottom:12px; padding-bottom:12px; border-bottom:1px dashed #eee;">
+              <div class="grid-3" style="margin-bottom:8px;">
+                <div>
+                  <div class="label">From</div>
+                  <div class="val">LHR</div>
+                  <div class="small">London</div>
+                </div>
+                <div style="text-align:center;"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2 12h20"/><path d="M12 2l4 10-4-2-4 2 4-10z"/></svg></div>
+                <div>
+                  <div class="label">To</div>
+                  <div class="val">IAH</div>
+                  <div class="small">Houston</div>
+                </div>
+              </div>
+              <div style="display:flex; gap:18px; align-items:flex-start;">
+                <div class="info-row">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l3 2"/></svg>
+                  <div>
+                    <div class="small">Departure: 9:00 AM</div>
+                    <div style="font-weight:700">Arrival: 1:45 PM</div>
+                  </div>
+                </div>
+                <div>
+                  <div class="small">Transfer in Houston</div>
+                  <div style="font-weight:700">3h 45m</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Leg 3 -->
+            <div>
+              <div class="grid-3" style="margin-bottom:8px;">
+                <div>
+                  <div class="label">From</div>
+                  <div class="val">IAH</div>
+                  <div class="small">Houston</div>
+                </div>
+                <div style="text-align:center;"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2 12h20"/><path d="M12 2l4 10-4-2-4 2 4-10z"/></svg></div>
+                <div>
+                  <div class="label">To</div>
+                  <div class="val">AMA</div>
+                  <div class="small">Amarillo, Texas</div>
+                </div>
+              </div>
+              <div style="display:flex; gap:18px; align-items:flex-start;">
+                <div class="info-row">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l3 2"/></svg>
+                  <div>
+                    <div class="small">Departure: 5:30 PM</div>
+                    <div style="font-weight:700">Final Arrival: 9:33 PM</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Boarding -->
+          <div class="section">
+            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M7 21v-2a4 4 0 0 1 4-4h2a4 4 0 0 1 4 4v2"/></svg> Boarding Information</h3>
+            <div class="grid-2" style="gap:12px;">
+              <div>
+                <div class="label">Seat</div>
+                <div class="val">11E</div>
+              </div>
+              <div>
+                <div class="label">Gate</div>
+                <div class="val">A2</div>
+              </div>
+              <div>
+                <div class="label">Boarding Time</div>
+                <div class="val">12:20 PM</div>
+              </div>
+              <div>
+                <div class="label">Group</div>
+                <div class="val">6B</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Booking -->
+          <div class="section">
+            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M4 4h16v16H4z"/></svg> Booking Information</h3>
+            <div class="grid-2">
+              <div>
+                <div class="label">Booked By</div>
+                <div class="val">Katherine Lucy</div>
+              </div>
+              <div style="display:flex; gap:10px; align-items:flex-start;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M4 4h16v16H4z"/></svg>
+                <div>
+                  <div class="label">Email</div>
+                  <div class="small" style="font-weight:700">katherinelucy2@gmail.com</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Price -->
+          <div style="margin-bottom:18px;">
+            <div class="price-card">
+              <div style="display:flex; gap:12px; align-items:center;">
+                <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M21 10v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-6"/></svg>
+                <div style="font-size:12px; font-weight:800; letter-spacing:1px;">TOTAL COST</div>
+              </div>
+              <div class="cost">$3,121.00</div>
+            </div>
+          </div>
+
+          <div class="footer">
+            <div style="font-weight:700; margin-bottom:6px; text-transform:uppercase; letter-spacing:1px;">Important: Print this e-ticket or present this on your mobile device</div>
+            <div>Sent from SPIRIT AIRLINE © ✓</div>
+          </div>
+        </div>
+
+        <!-- bottom decoration -->
+        <div style="height:10px; background:var(--gold-dark); border-bottom-left-radius:16px; border-bottom-right-radius:16px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- libs: html2canvas + jspdf (umd) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" integrity="sha512-BNa5JpGv6z5YQ3s1a6wq4J0UjF0oDqfGgqWgT6e4fP8s2wq3kF5gZcB1p2k0eK0W9n1qK1YqvVd9GkK2X2m9ag==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" integrity="sha512-6g6G6kq0v7U8rYy1k5zq8v3Q+5GmX5gq2h6Q5W3bGZ8P3v5h6H9V/6m7N3L2xE0xD4H1K6f7Z9x0Yz0d7g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+  <script>
+    // Helper: clone ticket and attach to off-screen holder so CSS computed correctly
+    function getClonedElement() {
+      const original = document.getElementById('ticket');
+      if (!original) return null;
+      // deep clone
+      const clone = original.cloneNode(true);
+      // size the clone to a reasonable capture width (match rendered width)
+      clone.style.width = getComputedStyle(original).width;
+      clone.style.boxSizing = 'border-box';
+      // remove any interactive controls from clone (if any)
+      // attach to hidden holder
+      const holder = document.getElementById('clone-holder');
+      holder.innerHTML = '';
+      holder.appendChild(clone);
+      // return the appended clone (must be in DOM)
+      return clone;
+    }
+
+    async function html2canvasOfClone(clonedElement, scale = 2) {
+      // ensure fonts/images loaded: wait a tick
+      await new Promise(r => setTimeout(r, 60));
+      const opts = {
+        backgroundColor: getComputedStyle(document.body).background || '#fff',
+        scale: scale,
+        useCORS: true,
+        allowTaint: true,
+        logging: false,
+        imageTimeout: 0
+      };
+      // html2canvas needs element in DOM
+      return html2canvas(clonedElement, opts);
+    }
+
+    // DOWNLOAD IMAGE
+    document.getElementById('downloadImage').addEventListener('click', async function () {
+      try {
+        const clone = getClonedElement();
+        if (!clone) throw new Error('Ticket element not found');
+        const canvas = await html2canvasOfClone(clone, 2);
+        const dataUrl = canvas.toDataURL('image/png');
+        const link = document.createElement('a');
+        link.href = dataUrl;
+        link.download = 'spirit-airline-eticket.png';
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        // clean up
+        document.getElementById('clone-holder').innerHTML = '';
+      } catch (err) {
+        console.error('Error downloading image:', err);
+        alert('Failed to download image. Try opening this page in a browser.');
+      }
+    });
+
+    // DOWNLOAD PDF using jsPDF
+    document.getElementById('downloadPDF').addEventListener('click', async function () {
+      try {
+        const clone = getClonedElement();
+        if (!clone) throw new Error('Ticket element not found');
+        const canvas = await html2canvasOfClone(clone, 2);
+        const imgData = canvas.toDataURL('image/png');
+
+        // create PDF (A4 portrait)
+        const { jsPDF } = window.jspdf;
+        // A4 in mm: 210 x 297
+        const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+        // Calculate image size to fit A4 while maintaining aspect ratio
+        const pdfWidth = 210 - 10; // margin 5mm each side
+        const imgWidthPx = canvas.width;
+        const imgHeightPx = canvas.height;
+        // convert px -> mm (approx 96dpi)
+        const pxToMm = (px) => (px * 25.4) / 96;
+        const imgWidthMm = pxToMm(imgWidthPx);
+        const imgHeightMm = pxToMm(imgHeightPx);
+
+        const ratio = Math.min(pdfWidth / imgWidthMm, (297 - 20) / imgHeightMm);
+        const renderWidth = imgWidthMm * ratio;
+        const renderHeight = imgHeightMm * ratio;
+
+        const x = (210 - renderWidth) / 2;
+        const y = 10;
+
+        pdf.addImage(imgData, 'PNG', x, y, renderWidth, renderHeight);
+        pdf.save('spirit-airline-eticket.pdf');
+
+        document.getElementById('clone-holder').innerHTML = '';
+      } catch (err) {
+        console.error('Error downloading PDF:', err);
+        alert('Failed to download PDF. Try opening this page in a browser.');
+      }
+    });
+
+    // SHARE IMAGE
+    document.getElementById('shareImage').addEventListener('click', async function () {
+      try {
+        if (!navigator.share || !navigator.canShare) {
+          // modern browsers support navigator.share, fallback to download prompt + message
+          // still try to generate image so user can save manually
+          const clone = getClonedElement();
+          const canvas = await html2canvasOfClone(clone, 2);
+          const dataUrl = canvas.toDataURL('image/png');
+          // try to convert to blob then use navigator.share if possible
+          canvas.toBlob(async (blob) => {
+            if (!blob) { alert('Share not supported; image prepared for download.'); return; }
+            const file = new File([blob], 'spirit-airline-eticket.png', { type: 'image/png' });
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+              try {
+                await navigator.share({ files: [file], title: 'Spirit Airline E-Ticket', text: 'My flight itinerary' });
+              } catch (e) {
+                // user cancelled or error
+                console.warn('Share failed:', e);
+                alert('Share failed or cancelled.');
+              }
+            } else {
+              // fallback: start download so user can share manually
+              const link = document.createElement('a');
+              link.href = dataUrl;
+              link.download = 'spirit-airline-eticket.png';
+              document.body.appendChild(link);
+              link.click();
+              link.remove();
+              alert('Sharing not available in this browser — image downloaded instead.');
+            }
+          }, 'image/png');
+          return;
+        }
+
+        // If share available and supports files
+        const clone = getClonedElement();
+        const canvas = await html2canvasOfClone(clone, 2);
+        canvas.toBlob(async (blob) => {
+          if (!blob) { alert('Could not create image to share.'); return; }
+          const file = new File([blob], 'spirit-airline-eticket.png', { type: 'image/png' });
+          try {
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+              await navigator.share({
+                files: [file],
+                title: 'Spirit Airline E-Ticket',
+                text: 'Check out my flight itinerary'
+              });
+            } else {
+              // fallback if canShare not supported
+              const link = document.createElement('a');
+              link.href = URL.createObjectURL(blob);
+              link.download = 'spirit-airline-eticket.png';
+              document.body.appendChild(link);
+              link.click();
+              link.remove();
+              alert('Share not fully supported — image downloaded instead.');
+            }
+          } catch (e) {
+            console.warn('Share failed:', e);
+            alert('Sharing failed or cancelled.');
+          }
+        }, 'image/png');
+
+        document.getElementById('clone-holder').innerHTML = '';
+      } catch (err) {
+        console.error('Error sharing image:', err);
+        alert('Failed to share image. Try opening this page in a browser that supports Web Share API (mobile).');
+      }
+    });
+
+    // SHARE PDF
+    document.getElementById('sharePDF').addEventListener('click', async function () {
+      try {
+        const clone = getClonedElement();
+        if (!clone) throw new Error('Ticket not found');
+        const canvas = await html2canvasOfClone(clone, 2);
+        const imgData = canvas.toDataURL('image/png');
+
+        // build PDF using jsPDF
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+        const pdfWidth = 210 - 10;
+        const pxToMm = (px) => (px * 25.4) / 96;
+        const imgWidthMm = pxToMm(canvas.width);
+        const imgHeightMm = pxToMm(canvas.height);
+        const ratio = Math.min(pdfWidth / imgWidthMm, (297 - 20) / imgHeightMm);
+        const renderWidth = imgWidthMm * ratio;
+        const renderHeight = imgHeightMm * ratio;
+        const x = (210 - renderWidth) / 2;
+        const y = 10;
+
+        pdf.addImage(imgData, 'PNG', x, y, renderWidth, renderHeight);
+
+        // create blob
+        const pdfBlob = pdf.output('blob');
+
+        const file = new File([pdfBlob], 'spirit-airline-eticket.pdf', { type: 'application/pdf' });
+
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          try {
+            await navigator.share({ files: [file], title: 'Spirit Airline E-Ticket', text: 'My flight itinerary' });
+          } catch (e) {
+            console.warn('Share failed:', e);
+            alert('Share failed or cancelled.');
+          }
+        } else {
+          // fallback: trigger download
+          const url = URL.createObjectURL(pdfBlob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = 'spirit-airline-eticket.pdf';
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+          URL.revokeObjectURL(url);
+          alert('Sharing not available — PDF downloaded instead.');
+        }
+
+        document.getElementById('clone-holder').innerHTML = '';
+      } catch (err) {
+        console.error('Error sharing PDF:', err);
+        alert('Failed to share PDF. Try opening this page in a mobile browser that supports sharing.');
+      }
+    });
+  </script>
+</body>
+</html>
